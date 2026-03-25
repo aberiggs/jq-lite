@@ -19,20 +19,20 @@ This roadmap is designed to help you learn Rust by building a scoped jq-like CLI
 
 ### Build
 
-- [ ] Parse CLI args (`jq-lite '<filter>'`)
-- [ ] Read JSON from stdin
-- [ ] Parse JSON into `serde_json::Value`
-- [ ] Print JSON output (pretty by default)
-- [ ] Print useful error messages for invalid JSON/filter
+- [x] Parse CLI args (`jq-lite '<filter>'`)
+- [x] Read JSON from stdin
+- [x] Parse JSON into `serde_json::Value`
+- [x] Print JSON output (pretty by default)
+- [x] Print useful error messages for invalid JSON/filter
 
 ### Rust Focus
 
-- [ ] Use `Result` + `?` consistently
+- [x] Use `Result` + `?` consistently
 - [ ] Keep modules separated (`cli`, `error`, `main`)
 
 ### Done When
 
-- [ ] `echo '{"a":1}' | jq-lite '.'` works end-to-end
+- [x] `echo '{"a":1}' | jq-lite '.'` works end-to-end
 
 ---
 
