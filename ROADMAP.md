@@ -40,25 +40,27 @@ This roadmap is designed to help you learn Rust by building a scoped jq-like CLI
 
 ### Build
 
-- [ ] Support `.`
-- [ ] Support field access: `.name`
-- [ ] Support chained fields: `.a.b.c`
-- [ ] Create AST with `enum`/`struct` nodes
-- [ ] Evaluate AST against JSON input
-
-### Suggested Grammar (v0)
-
-- [ ] `Filter := "." ("." IDENT)*`
+- [x] Support `.`
+- [x] Support field access: `.name`
+- [x] Support chained fields: `.a.b.c`
+- [x] Create AST with `enum`/`struct` nodes
+- [x] Evaluate AST against JSON input
 
 ### Rust Focus
 
-- [ ] Model expressions with `enum Expr`
-- [ ] Use pattern matching for evaluation
-- [ ] Decide behavior for missing fields (`null` vs error) and document it
+- [x] Model expressions with `enum Expr`
+- [x] Use pattern matching for evaluation
+- [ ] Add tests
+  - [ ] parse "." -> empty path  
+  - [ ] parse ".a.b" -> ["a","b"]  
+  - [ ] parse "a.b" -> error
+  - [ ] parse ".a..b" -> error  
+  - [ ] eval existing path returns value 
+  - [ ] eval missing path returns null
 
 ### Done When
 
-- [ ] `{"a":{"b":2}}` with `.a.b` returns `2`
+- [x] `{"a":{"b":2}}` with `.a.b` returns `2`
 
 ---
 
