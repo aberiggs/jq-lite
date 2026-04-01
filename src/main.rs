@@ -1,9 +1,7 @@
 mod ast;
 mod evaluator;
+mod lexer;
 mod parser;
-
-use evaluator::eval_expr;
-use parser::parse_filter;
 
 use serde_json::Value;
 
@@ -27,8 +25,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let value: Value = serde_json::from_str(&input_json_str)?;
 
-    let expr = parse_filter(filter_txt)?;
-    let result = eval_expr(&expr, &value);
+    let tokens = lexer::lex(filter_txt);
+    let expr = parser::parse_tokens(tokens)?;
+    let result = evaluator::eval_expr(&expr, &value);
 
     println!("{}", serde_json::to_string_pretty(&result)?);
 

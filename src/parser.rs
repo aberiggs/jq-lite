@@ -1,34 +1,52 @@
 use crate::ast::Expr;
+use crate::lexer::Token;
 
 #[derive(Debug)]
 pub struct ParseError(String);
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "Parsing error: {}", self.0)
     }
 }
 
 impl std::error::Error for ParseError {}
 
-pub fn parse_filter(filter_txt: &str) -> Result<Expr, ParseError> {
-    if filter_txt.starts_with('.') {
-        if filter_txt == "." {
-            // Identity filter: return empty path
-            return Ok(Expr::Path(vec![]));
-        }
-
-        // Split filter txt into segments, excluding the leading '.'
-        let segments: Vec<String> = filter_txt[1..].split('.').map(|s| s.to_string()).collect();
-        // Check if there are any empty segments (which shouldn't be allowed)
-        if segments.iter().any(|s| s.is_empty()) {
-            return Err(ParseError(String::from(
-                "Invalid filter string: empty segment in path!",
-            )));
-        }
-
-        return Ok(Expr::Path(segments));
+pub fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, ParseError> {
+    if tokens.is_empty() {
+        return Err(ParseError(String::from("No tokens to parse!")));
+    } else if tokens[0] != Token::Dot {
+        return Err(ParseError(String::from(
+            "Filter expression must start with a '.'!",
+        )));
     }
 
-    Err(ParseError(String::from("Unrecognized filter string!")))
+    // TODO: Update this so that the parser looks forward rather than backward.
+    let mut prev_token = &tokens[0];
+    // NOTE: Revisit. `Expr` won't only be a `Path` in the future.
+    let mut expr = Expr::Path(vec![]);
+    for token in &tokens[1..] {
+        match token {
+            Token::Dot => {
+                if prev_token == &Token::Dot {
+                    return Err(ParseError(String::from("Repeated '.' in path expression!")));
+                }
+            }
+            Token::Identifier(ident) => {
+                let Expr::Path(path) = &mut expr;
+                path.push(ident.clone());
+            }
+        }
+
+        prev_token = token;
+    }
+
+    let Expr::Path(path) = &expr;
+    if prev_token == &Token::Dot && !path.is_empty() {
+        return Err(ParseError(String::from(
+            "Path expression must end with an identifier!",
+        )));
+    }
+
+    Ok(expr)
 }
