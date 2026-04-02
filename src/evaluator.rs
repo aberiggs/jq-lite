@@ -1,23 +1,56 @@
 use crate::ast::Expr;
-use serde_json::Value;
+use crate::ast::PathSegment;
 
-pub fn eval_expr(expr: &Expr, input: &Value) -> Value {
-    match expr {
-        Expr::Path(segments) => {
-            let mut cur = input;
-            for segment in segments {
-                match cur {
-                    Value::Object(map) => {
-                        if let Some(next) = map.get(segment) {
-                            cur = next;
-                        } else {
-                            return Value::Null;
-                        }
+pub fn eval_expr(expr: &Expr, input: &serde_json::Value) -> Vec<serde_json::Value> {
+    if !matches!(expr, Expr::Path(_)) {
+        // Currently, we only support Path expressions
+        return vec![];
+    }
+
+    let mut val = input;
+
+    let Expr::Path(path) = expr;
+    println!("Evaluating: {:?}", expr);
+
+    let mut expr_iter = path.iter();
+
+    while let Some(segment) = expr_iter.next() {
+        if let serde_json::Value::Object(map) = val {
+            match segment {
+                PathSegment::Field(field) => {
+                    if let Some(next) = map.get(field) {
+                        val = next;
+                    } else {
+                        return vec![];
                     }
-                    _ => return Value::Null,
                 }
+                _ => return vec![],
             }
-            cur.clone()
+        } else if let serde_json::Value::Array(arr) = val {
+            match segment {
+                PathSegment::Index(index) => {
+                    if let Some(next) = arr.get(*index) {
+                        val = next;
+                    } else {
+                        return vec![];
+                    }
+                }
+                PathSegment::Iter => {
+                    // Assemble an new expr with the remaining segments we will traverse
+                    let remaining: Vec<PathSegment> = expr_iter.cloned().collect();
+                    let new_expr = Expr::Path(remaining);
+                    let mut output = vec![];
+                    for item in arr {
+                        output.extend(eval_expr(&new_expr, item));
+                    }
+                    return output;
+                }
+                _ => return vec![],
+            }
+        } else {
+            return vec![];
         }
     }
+
+    vec![val.clone()]
 }

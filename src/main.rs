@@ -25,11 +25,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let value: Value = serde_json::from_str(&input_json_str)?;
 
-    let tokens = lexer::lex(filter_txt);
+    let tokens = lexer::lex(filter_txt)?;
+    println!("Tokens: {:?}", tokens);
     let expr = parser::parse_tokens(tokens)?;
-    let result = evaluator::eval_expr(&expr, &value);
+    println!("Expr: {:?}", expr);
+    let results = evaluator::eval_expr(&expr, &value);
 
-    println!("{}", serde_json::to_string_pretty(&result)?);
+    println!("{}", serde_json::to_string_pretty(&results)?);
 
     Ok(())
 }

@@ -2,30 +2,67 @@
 pub enum Token {
     Dot,
     Identifier(String),
+    LBracket,
+    RBracket,
+    Number(String),
 }
 
-pub fn lex(filter_txt: &str) -> Vec<Token> {
+#[derive(Debug)]
+pub struct LexError(String);
+
+impl std::fmt::Display for LexError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Lex error: {}", self.0)
+    }
+}
+
+impl std::error::Error for LexError {}
+
+pub fn lex(filter_txt: &str) -> Result<Vec<Token>, LexError> {
     let mut tokens = Vec::new();
-    let mut chars = filter_txt.chars().peekable();
-    while let Some(c) = chars.next() {
+    let mut iter = filter_txt.char_indices().peekable();
+
+    while let Some((pos, c)) = iter.next() {
         match c {
             '.' => tokens.push(Token::Dot),
-            _ if c.is_alphanumeric() || c == '_' || c == '-' => {
-                let mut ident = String::new();
-                ident.push(c);
-                while let Some(&next) = chars.peek() {
-                    if next.is_alphanumeric() || next == '_' || next == '-' {
+            c if c.is_ascii_alphabetic() || c == '_' => {
+                let mut ident = String::from(c);
+                while let Some(&(_, next)) = iter.peek() {
+                    if next.is_ascii_alphanumeric() || next == '_' || next == '-' {
                         ident.push(next);
-                        chars.next();
+                        iter.next();
                     } else {
                         break;
                     }
                 }
                 tokens.push(Token::Identifier(ident));
             }
-            _ => {}
+            '[' => tokens.push(Token::LBracket),
+            ']' => tokens.push(Token::RBracket),
+            c if c.is_ascii_digit() || c == '.' => {
+                let mut num = String::from(c);
+                while let Some(&(_, next)) = iter.peek() {
+                    if next.is_ascii_digit() || next == '.' {
+                        num.push(next);
+                        iter.next();
+                    } else {
+                        break;
+                    }
+                }
+                tokens.push(Token::Number(num));
+            }
+
+            c if c.is_whitespace() => {
+                // Eat whitespace
+            }
+            _ => {
+                return Err(LexError(format!(
+                    "Unexpected character: {:?} at pos {}",
+                    c, pos
+                )));
+            }
         }
     }
 
-    tokens
+    Ok(tokens)
 }

@@ -1,4 +1,5 @@
 use crate::ast::Expr;
+use crate::ast::PathSegment;
 use crate::lexer::Token;
 
 #[derive(Debug)]
@@ -21,31 +22,91 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, ParseError> {
         )));
     }
 
-    // TODO: Update this so that the parser looks forward rather than backward.
-    let mut prev_token = &tokens[0];
     // NOTE: Revisit. `Expr` won't only be a `Path` in the future.
     let mut expr = Expr::Path(vec![]);
-    for token in &tokens[1..] {
+
+    let mut tok_iter = tokens.iter().peekable();
+    while let Some(token) = tok_iter.next() {
         match token {
             Token::Dot => {
-                if prev_token == &Token::Dot {
-                    return Err(ParseError(String::from("Repeated '.' in path expression!")));
+                let Some(&next_token) = tok_iter.peek() else {
+                    // An expression should never end with a `Dot` unless it's the only token in the expression
+                    if tokens.len() > 1 {
+                        return Err(ParseError(String::from(
+                            "Path expression cannot end with a '.'!",
+                        )));
+                    }
+
+                    break;
+                };
+
+                if !matches!(next_token, Token::Identifier(_) | Token::LBracket) {
+                    return Err(ParseError(format!(
+                        "Invalid token '{:?}' after '.'!",
+                        next_token
+                    )));
                 }
             }
             Token::Identifier(ident) => {
                 let Expr::Path(path) = &mut expr;
-                path.push(ident.clone());
+                path.push(PathSegment::Field(ident.clone()));
+            }
+            Token::LBracket => {
+                // Two valid outcomes from here.
+                // A. Index access (e.g., .[0])
+                // B. Iteration (e.g., .[])
+
+                let Some(&next_token) = tok_iter.peek() else {
+                    return Err(ParseError(String::from("Expected a token to follow '['!")));
+                };
+
+                match next_token {
+                    Token::Number(idx_str) => {
+                        // First, check if idx_str is even a valid index
+                        let idx: usize = idx_str.parse().map_err(|_| {
+                            ParseError(String::from("Non-integer index when accessing an array"))
+                        })?;
+
+                        // Eat the number token
+                        tok_iter.next();
+
+                        // Now check to make sure we have a closing bracket
+                        let Some(&next_next_token) = tok_iter.peek() else {
+                            return Err(ParseError(format!("Missing ']' after '[{}'!", idx_str,)));
+                        };
+
+                        if !matches!(next_next_token, Token::RBracket) {
+                            return Err(ParseError(format!(
+                                "Expected ']' after '[{}', but got '{:?}'!",
+                                idx_str, next_next_token
+                            )));
+                        }
+
+                        // Now eat the closing bracket
+                        tok_iter.next();
+
+                        let Expr::Path(path) = &mut expr;
+                        path.push(PathSegment::Index(idx));
+                    }
+                    Token::RBracket => {
+                        // Eat the closing bracket
+                        tok_iter.next();
+
+                        let Expr::Path(path) = &mut expr;
+                        path.push(PathSegment::Iter);
+                    }
+                    _ => {
+                        return Err(ParseError(format!(
+                            "Invalid token '{:?}' after '['!",
+                            next_token
+                        )));
+                    }
+                }
+            }
+            _ => {
+                return Err(ParseError(format!("Unexpected token {:?}!", token)));
             }
         }
-
-        prev_token = token;
-    }
-
-    let Expr::Path(path) = &expr;
-    if prev_token == &Token::Dot && !path.is_empty() {
-        return Err(ParseError(String::from(
-            "Path expression must end with an identifier!",
-        )));
     }
 
     Ok(expr)
