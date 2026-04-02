@@ -2,16 +2,9 @@ use crate::ast::Expr;
 use crate::ast::PathSegment;
 
 pub fn eval_expr(expr: &Expr, input: &serde_json::Value) -> Vec<serde_json::Value> {
-    if !matches!(expr, Expr::Path(_)) {
-        // Currently, we only support Path expressions
-        return vec![];
-    }
-
     let mut val = input;
 
     let Expr::Path(path) = expr;
-    println!("Evaluating: {:?}", expr);
-
     let mut expr_iter = path.iter();
 
     while let Some(segment) = expr_iter.next() {

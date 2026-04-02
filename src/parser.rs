@@ -40,6 +40,7 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, ParseError> {
                     break;
                 };
 
+                // Check for the next expected tokens
                 if !matches!(next_token, Token::Identifier(_) | Token::LBracket) {
                     return Err(ParseError(format!(
                         "Invalid token '{:?}' after '.'!",
@@ -50,6 +51,16 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, ParseError> {
             Token::Identifier(ident) => {
                 let Expr::Path(path) = &mut expr;
                 path.push(PathSegment::Field(ident.clone()));
+
+                if let Some(&next_token) = tok_iter.peek() {
+                    // If not the end, check that the next token is either a '.' or '['
+                    if !matches!(next_token, Token::Dot | Token::LBracket) {
+                        return Err(ParseError(format!(
+                            "Invalid token '{:?}' after field access '{}'!",
+                            next_token, ident
+                        )));
+                    }
+                }
             }
             Token::LBracket => {
                 // Two valid outcomes from here.
@@ -100,6 +111,14 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, ParseError> {
                             "Invalid token '{:?}' after '['!",
                             next_token
                         )));
+                    }
+                }
+
+                // Now that we've parsed the whole index expression, check that the next token is valid
+                if let Some(&next_token) = tok_iter.peek() {
+                    // If not the end, check that the next token is either a '.' or '['
+                    if !matches!(next_token, Token::Dot | Token::LBracket) {
+                        return Err(ParseError(format!("Unexpected token {:?}!", next_token)));
                     }
                 }
             }

@@ -10,6 +10,13 @@ use std::error;
 use std::io;
 use std::io::Read;
 
+macro_rules! dprintln {
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        println!($($arg)*);
+    };
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     let args: Vec<String> = env::args().collect();
 
@@ -26,12 +33,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let value: Value = serde_json::from_str(&input_json_str)?;
 
     let tokens = lexer::lex(filter_txt)?;
-    println!("Tokens: {:?}", tokens);
+    dprintln!("Tokens: {:?}", tokens);
     let expr = parser::parse_tokens(tokens)?;
-    println!("Expr: {:?}", expr);
+    dprintln!("Expr: {:?}", expr);
     let results = evaluator::eval_expr(&expr, &value);
 
-    println!("{}", serde_json::to_string_pretty(&results)?);
+    for result in &results {
+        println!("{}", serde_json::to_string_pretty(result)?);
+    }
 
     Ok(())
 }

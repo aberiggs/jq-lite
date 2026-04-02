@@ -39,10 +39,20 @@ pub fn lex(filter_txt: &str) -> Result<Vec<Token>, LexError> {
             }
             '[' => tokens.push(Token::LBracket),
             ']' => tokens.push(Token::RBracket),
-            c if c.is_ascii_digit() || c == '.' => {
+            c if c.is_ascii_digit() => {
                 let mut num = String::from(c);
+                let mut found_decimal = false;
                 while let Some(&(_, next)) = iter.peek() {
                     if next.is_ascii_digit() || next == '.' {
+                        if next == '.' {
+                            if found_decimal {
+                                return Err(LexError(format!(
+                                    "Found multiple decimal points in number at position {}",
+                                    pos
+                                )));
+                            }
+                            found_decimal = true;
+                        }
                         num.push(next);
                         iter.next();
                     } else {
@@ -51,7 +61,6 @@ pub fn lex(filter_txt: &str) -> Result<Vec<Token>, LexError> {
                 }
                 tokens.push(Token::Number(num));
             }
-
             c if c.is_whitespace() => {
                 // Eat whitespace
             }
