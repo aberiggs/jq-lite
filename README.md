@@ -2,12 +2,15 @@
 
 A small jq-inspired CLI tool built in Rust.
 
-## Planned jq Subset
+## Current jq Subset
 
 - [x] Identity: `.`
 - [x] Field access: `.name`, `.a.b`
 - [x] Array indexing: `.[0]`, `.items[2]`
 - [x] Array iteration: `.[]`, `.items[]`
+
+### Not Yet Implemented
+
 - [ ] Pipe: `.users[] | .name`
 - [ ] Constructors: `[.a, .b]`, `{id: .id, name: .name}`
 - [ ] `select(...)` with basic comparisons (`==`, `!=`, `>`, `<`, `>=`, `<=`)
