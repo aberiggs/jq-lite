@@ -50,13 +50,13 @@ This roadmap is designed to help you learn Rust by building a scoped jq-like CLI
 
 - [x] Model expressions with `enum Expr`
 - [x] Use pattern matching for evaluation
-- [ ] Add tests
-  - [ ] parse "." -> empty path  
-  - [ ] parse ".a.b" -> ["a","b"]  
-  - [ ] parse "a.b" -> error
-  - [ ] parse ".a..b" -> error  
-  - [ ] eval existing path returns value 
-  - [ ] eval missing path returns null
+- [x] Add tests
+  - [x] parse "." -> empty path  
+  - [x] parse ".a.b" -> ["a","b"]  
+  - [x] parse "a.b" -> error
+  - [x] parse ".a..b" -> error  
+  - [x] eval existing path returns value 
+  - [x] eval missing path returns empty output
 
 ### Done When
 
@@ -68,19 +68,19 @@ This roadmap is designed to help you learn Rust by building a scoped jq-like CLI
 
 ### Build
 
-- [ ] Support indexing: `.items[0]`
-- [ ] Support expansion: `.items[]`
-- [ ] Print one output per emitted value
+- [x] Support indexing: `.items[0]`
+- [x] Support expansion: `.items[]`
+- [x] Print one output per emitted value
 
 ### Rust Focus
 
-- [ ] Represent evaluator outputs as stream-like (`Vec<Value>` initially is fine)
-- [ ] Keep cloning minimal; understand where ownership forces clones
+- [x] Represent evaluator outputs as stream-like (`Vec<Value>` initially is fine)
+- [x] Keep cloning minimal; understand where ownership forces clones
 
 ### Done When
 
-- [ ] `[1,2,3]` with `.[]` prints `1`, `2`, `3` (one per line)
-- [ ] Out-of-bounds behavior is defined and tested
+- [x] `[1,2,3]` with `.[]` prints `1`, `2`, `3` (one per line)
+- [x] Out-of-bounds behavior is defined and tested
 
 ---
 
